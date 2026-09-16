@@ -301,6 +301,14 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
 .social-name{font-size:11px;color:var(--gray-400);font-family:'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.08em;}
 .social-followers{font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--black);}
 .social-delta{font-size:11px;font-family:'Barlow',sans-serif;margin-top:2px;}
+
+/* Demo (portafolio público) */
+#nv-demo-exit{display:none;}
+.demo-mode #cl-tools,.demo-mode #nv-in,.demo-mode #nv-out,.demo-mode #t-pill{display:none!important;}
+.demo-mode #nv-demo-exit{display:flex!important;}
+.demo-banner{display:none;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--gold-light);border-bottom:1px solid var(--gold-mid);color:var(--gold);font-family:'Barlow',sans-serif;font-size:12px;padding:8px 16px;text-align:center;position:sticky;top:48px;z-index:40;}
+.demo-mode .demo-banner{display:flex;}
+.demo-banner button{background:var(--gold);color:#330033;border:none;border-radius:var(--radius);padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;}
 </style>
 </head>
 <body>
@@ -326,7 +334,7 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
     </div>
     <div class="s-sec" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
       <div class="s-lbl">Clientes
-        <div style="display:flex;align-items:center;gap:4px">
+        <div id="cl-tools" style="display:flex;align-items:center;gap:4px">
           <button onclick="openAdd()" title="Agregar" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:18px;line-height:1;padding:0">+</button>
           <button onclick="exportClients()" title="Exportar" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:13px;padding:0 2px">↑</button>
           <button onclick="document.getElementById('import-inp').click()" title="Importar" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:13px;padding:0 2px">↓</button>
@@ -338,6 +346,7 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
     <div style="flex-shrink:0;border-top:1px solid var(--border);padding:6px 10px">
       <div class="nav hidden" id="nv-in" onclick="doOAuth()" style="padding:6px 8px"><span class="ndot"></span>Iniciar sesión</div>
       <div class="nav" id="nv-out" onclick="doLogout()" style="padding:6px 8px"><span class="ndot"></span>Desconectar</div>
+      <div class="nav" id="nv-demo-exit" onclick="exitDemo()" style="padding:6px 8px"><span class="ndot"></span>Acceso agencia →</div>
     </div>
     <div class="s-foot">Google Search Console + <span>GA4</span> + <span>Claude AI</span></div>
   </aside>
@@ -388,6 +397,10 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
         <div class="pill ok" id="t-pill"><span class="pdot"></span><span id="t-st">Conectado</span></div>
         <button class="brs" onclick="takePolaroid()" id="btn-polaroid" style="display:none">📷 Tomar una Polaroid</button>
       </div>
+    </div>
+    <div class="demo-banner" id="demo-banner">
+      🔎 Estás viendo <b>datos de ejemplo</b> — por confidencialidad, los datos reales de clientes no se muestran públicamente.
+      <button onclick="exitDemo()">Acceso agencia →</button>
     </div>
     <div class="content">
       <div id="pdf-header">
@@ -677,6 +690,7 @@ const ls={g:k=>{try{return JSON.parse(localStorage.getItem(k));}catch(e){return 
 const clients=()=>ls.g('bb_cl')||[];
 const SERVICES=[{key:'seo',label:'Posicionamiento SEO · AEO · GEO'},{key:'ads',label:'Google Ads'},{key:'meta',label:'Meta Ads'}];
 function hasService(key){
+  if(DEMO_ACTIVE){const c=DEMO_DATA[S.id];return c?c.services.includes(key):true;}
   const c=clients().find(x=>x.id===S.id);
   if(!c||!c.services)return true; // sin campo "services" = sin restricción (compatibilidad)
   return c.services.includes(key);
@@ -696,18 +710,341 @@ function chartEmptyState(canvasId, hasData, msg){
   return hasData;
 }
 
+// ─── DEMO (PORTAFOLIO PÚBLICO) ─────────────────────────────────────────────────
+// Datos 100% inventados. Nunca se muestran datos reales de clientes en esta demo pública.
+let DEMO_ACTIVE=false;
+function demoSeed(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return function(){h=Math.imul(h^h>>>16,2246822519);h=Math.imul(h^h>>>13,3266489917);h^=h>>>16;return(h>>>0)/4294967296;};}
+function demoSeries(n,total,seed){const rand=demoSeed(seed);const w=Array.from({length:n},()=>0.55+rand()*0.9);const sum=w.reduce((a,b)=>a+b,0);return w.map(x=>Math.max(0,Math.round(total*x/sum)));}
+function demoDates(n){const a=[];for(let i=n-1;i>=0;i--)a.push(ago(i));return a;}
+
+const DEMO_CLIENTS=[
+  {id:'demo-cafe',name:'Café Andina',rubro:'Cafetería de especialidad',url:'https://cafeandina.cl',services:['seo','meta'],
+    seo:{clicks:842,clicksPrev:701,impr:38400,imprPrev:33100,ctr:0.0219,ctrPrev:0.0212,pos:14.2,posPrev:16.8,
+      kws:[['café de especialidad santiago',4.2,62,0.081,6.1],['café andina precios',3.1,55,0.09,3.5],['donde comprar café en grano',8.7,40,0.05,9.0],
+        ['mejor cafetería providencia',11.3,25,0.03,null],['subscripción café mensual',15.4,12,0.02,19.2],['capacitación barista santiago',22.6,8,0.01,28.4],
+        ['café de origen colombiano',9.9,30,0.045,9.6],['máquina espresso hogar',18.2,10,0.015,17.0],['café molido vs grano',13.5,14,0.02,null],['delivery café santiago',6.8,45,0.07,8.1]],
+      aeo:[['¿Cuál es el mejor café de especialidad en Santiago?',320,0.09,true,true],['¿Cómo se prepara un café filtrado en casa?',210,0.06,true,true],
+        ['diferencia entre café arábica y robusta',180,0.11,true,true],['¿Dónde comprar café en grano en Providencia?',150,0.07,true,true]]},
+    camp:null,
+    meta:{spend:680000,spendPrev:610000,imp:210000,impPrev:195000,clicks:4200,clicksPrev:3900,ctr:2.0,ctrPrev:1.95,reach:95000,reachPrev:90000,conv:145,convPrev:120,value:0,freq:2.2,freqPrev:2.05,
+      rows:[['Café Andina - Alcance Local',185000,0.062,58000,4],['Café Andina - Promoción Verano',52000,0.041,142000,52],['Café Andina - Remarketing IG',443000,0.028,10000,89]],
+      fb:{followers:8400,name:'cafeandina'},ig:{followers:15200,username:'cafeandina'}},
+    geo:null,
+    rec:{resumen:'Café Andina mantiene un buen ritmo de crecimiento en SEO local y Meta Ads, con mejoras claras en posicionamiento de keywords transaccionales.',
+      seo:[{prioridad:'alta',titulo:'Reforzar contenido de origen de café',recomendacion:'Crear una página dedicada a "café de especialidad santiago" con contenido educativo — ya está en posición 4.2 y puede llegar a top 3 con un empujón de contenido.'},
+        {prioridad:'media',titulo:'Aprovechar la keyword de marca',recomendacion:'"café andina precios" ya está en posición 3.1 — asegura que la landing de precios esté siempre actualizada y con CTA claro a compra online.'},
+        {prioridad:'baja',titulo:'Expandir contenido de preparación',recomendacion:'Sumar guías de preparación (V60, prensa francesa) para capturar más búsquedas conversacionales tipo "cómo se prepara".'}],
+      aeo:[{prioridad:'alta',titulo:'Responder la pregunta de especialidad directamente',recomendacion:'La query "¿Cuál es el mejor café de especialidad en Santiago?" tiene 320 impresiones — crea una sección de FAQ que la responda explícitamente para IAs generativas.'},
+        {prioridad:'media',titulo:'Contenido comparativo arábica vs robusta',recomendacion:'Es una de las queries con más CTR (11%) — un artículo comparativo puede consolidar autoridad temática.'}],
+      campanas:[]}},
+  {id:'demo-roble',name:'Ferretería El Roble',rubro:'Ferretería y materiales de construcción',url:'https://ferreteriaelroble.cl',services:['seo','ads'],
+    seo:{clicks:1560,clicksPrev:1290,impr:61200,imprPrev:58000,ctr:0.0255,ctrPrev:0.0222,pos:9.8,posPrev:12.1,
+      kws:[['ferretería el roble providencia',1.2,210,0.22,1.5],['ferretería online santiago',2.1,140,0.14,3.0],['comprar taladro precio',5.4,80,0.09,6.0],
+        ['tornillos por mayor',7.9,55,0.06,null],['pintura exterior oferta',12.1,30,0.03,15.4],['herramientas eléctricas baratas',9.3,45,0.05,11.2],
+        ['sierra circular precio chile',14.0,22,0.025,13.8],['materiales construcción a domicilio',10.5,38,0.04,12.9],['destornillador set profesional',19.8,9,0.012,24.1],['ferretería 24 horas',6.1,60,0.08,7.4]],
+      aeo:[['¿Qué taladro es mejor para uso doméstico?',400,0.05,true,true],['diferencia entre pintura esmalte y látex',260,0.08,true,true],
+        ['¿Dónde comprar herramientas al por mayor en Santiago?',190,0.06,true,true]]},
+    camp:{sess:3200,sessPrev:2700,conv:145,convPrev:110,cost:980000,costPrev:890000,rev:2450000,
+      rows:[['Búsqueda - Herramientas','cpc',1400,68,410000],['Búsqueda - Marca','cpc',820,52,180000],['Display - Remarketing','cpc',650,15,240000],['Shopping - Catálogo','cpc',330,10,150000]]},
+    meta:null,
+    geo:{orgCr:2.1,
+      sources:[['chatgpt',420,340,18,95],['google_ai',310,260,12,70],['perplexity',140,110,6,60],['claude',80,65,3,50]],
+      landing:[['/herramientas-electricas',280,14],['/pinturas',190,8],['/promociones',110,4],['/contacto',60,2]]},
+    rec:{resumen:'Ferretería El Roble mejoró notablemente su posicionamiento SEO (de 12.1 a 9.8 en promedio) y bajó el costo por conversión en Google Ads, mostrando que la inversión está rindiendo cada vez mejor.',
+      seo:[{prioridad:'alta',titulo:'Consolidar keyword de marca en posición 1',recomendacion:'"ferretería el roble providencia" ya está en posición 1.2 — protégela con contenido fresco y reseñas para no perder terreno frente a competidores locales.'},
+        {prioridad:'media',titulo:'Capturar búsquedas de "por mayor"',recomendacion:'"tornillos por mayor" es una keyword nueva con buen volumen — crear una página B2B dedicada puede capturar clientes de mayor ticket.'},
+        {prioridad:'baja',titulo:'Mejorar contenido de pintura',recomendacion:'"pintura exterior oferta" está estancada en posición 12 — revisar intención de búsqueda y agregar comparativas de marcas.'}],
+      aeo:[{prioridad:'alta',titulo:'FAQ sobre elección de taladro',recomendacion:'400 impresiones en "¿Qué taladro es mejor para uso doméstico?" — un comparador simple puede capturar esta demanda informativa antes de la compra.'},
+        {prioridad:'media',titulo:'Guía pintura esmalte vs látex',recomendacion:'Buen CTR (8%) — expandir a video corto para reforzar en Google AI Overview.'}],
+      campanas:[{prioridad:'alta',titulo:'Reasignar presupuesto a Búsqueda - Herramientas',recomendacion:'Es la campaña con mejor CPA — considera mover presupuesto desde Display - Remarketing, que tiene la conversión más cara.'},
+        {prioridad:'media',titulo:'Escalar Shopping - Catálogo',recomendacion:'Buen ROAS pero bajo volumen — aumentar el feed de productos puede escalar resultados sin perder eficiencia.'}]}},
+  {id:'demo-vitalis',name:'Clínica Vitalis',rubro:'Salud dental',url:'https://clinicavitalis.cl',services:['seo','ads','meta'],
+    seo:{clicks:2100,clicksPrev:1750,impr:88000,imprPrev:79000,ctr:0.0239,ctrPrev:0.0221,pos:7.3,posPrev:9.6,
+      kws:[['clínica vitalis opiniones',1.1,300,0.28,1.3],['urgencia dental 24 horas',2.0,220,0.18,2.5],['clínica dental santiago centro',3.0,180,0.12,4.2],
+        ['precio limpieza dental',5.1,95,0.08,6.8],['mejor clínica dental providencia',6.7,70,0.06,null],['implantes dentales precio chile',9.4,60,0.05,12.0],
+        ['ortodoncia invisible precio',8.0,65,0.055,9.9],['blanqueamiento dental santiago',11.2,40,0.035,13.5],['endodoncia dolor',15.6,20,0.02,18.0],['dentista urgencia providencia',4.5,110,0.09,5.6]],
+      aeo:[['¿Cuánto cuesta un implante dental en Chile?',520,0.09,true,true],['¿Cómo saber si necesito una endodoncia?',310,0.07,true,true],
+        ['diferencia entre ortodoncia y ortopedia dental',240,0.10,true,true]]},
+    camp:{sess:4100,sessPrev:3600,conv:210,convPrev:165,cost:1450000,costPrev:1380000,rev:6300000,
+      rows:[['Búsqueda - Urgencias Dentales','cpc',1600,95,520000],['Búsqueda - Implantes','cpc',980,58,410000],['Performance Max - Clínica','cpc',1050,42,380000],['Búsqueda - Marca Vitalis','cpc',470,15,140000]]},
+    meta:{spend:1120000,spendPrev:980000,imp:340000,impPrev:310000,clicks:7800,clicksPrev:6900,ctr:2.29,ctrPrev:2.23,reach:150000,reachPrev:140000,conv:310,convPrev:260,value:4900000,freq:2.27,freqPrev:2.21,
+      gaSess:890,gaSessPrev:720,gaConv:48,gaConvPrev:35,
+      rows:[['Vitalis - Alcance Comunas',420000,0.031,88000,120],['Vitalis - Conversión Implantes',310000,0.024,52000,95],['Vitalis - Retargeting Web',390000,0.021,38000,95]],
+      fb:{followers:22000,name:'clinicavitalis'},ig:{followers:41000,username:'clinicavitalis'}},
+    geo:{orgCr:3.4,
+      sources:[['chatgpt',680,540,34,110],['google_ai',540,430,26,88],['perplexity',210,175,10,75],['claude',130,105,6,65]],
+      landing:[['/implantes-dentales',410,22],['/urgencias',260,15],['/ortodoncia',180,9],['/blanqueamiento',95,4]]},
+    rec:{resumen:'Clínica Vitalis tiene el mejor desempeño combinado: SEO, Google Ads y Meta Ads crecen en conjunto, con buen ROAS en campañas de búsqueda y una frecuencia publicitaria todavía sana en Meta.',
+      seo:[{prioridad:'alta',titulo:'Proteger keyword de marca con reseñas',recomendacion:'"clínica vitalis opiniones" es la keyword con mejor CTR (28%) — sumar reseñas recientes ayuda a mantener la posición 1.'},
+        {prioridad:'alta',titulo:'Contenido de urgencias dentales',recomendacion:'"urgencia dental 24 horas" está en posición 2.0 con alto volumen — asegurar que la landing tenga botón de llamada visible arriba del todo.'},
+        {prioridad:'media',titulo:'Bajar tiempo a top 3 en implantes',recomendacion:'"implantes dentales precio chile" en posición 9.4 — es una keyword de alta intención comercial, prioritaria para link building interno.'}],
+      aeo:[{prioridad:'alta',titulo:'Responder directamente el costo de implantes',recomendacion:'520 impresiones en "¿Cuánto cuesta un implante dental en Chile?" — publicar un rango de precios referencial mejora la captura en IAs generativas.'},
+        {prioridad:'media',titulo:'Contenido sobre endodoncia',recomendacion:'Buen volumen informativo — un artículo claro puede reducir la ansiedad del paciente y mejorar conversión.'}],
+      campanas:[{prioridad:'alta',titulo:'Escalar Búsqueda - Urgencias Dentales',recomendacion:'Es la campaña con mayor volumen y buen CPA — tiene espacio para escalar presupuesto sin perder eficiencia.'},
+        {prioridad:'media',titulo:'Optimizar Performance Max',recomendacion:'Buen volumen pero conviene revisar segmentación de audiencia para bajar el costo por conversión.'},
+        {prioridad:'baja',titulo:'Test de creativos en Meta Retargeting',recomendacion:'La frecuencia (2.27x) todavía es sana, pero conviene preparar nuevos creativos para cuando suba de 3x.'}]}}
+];
+const DEMO_DATA={};DEMO_CLIENTS.forEach(c=>DEMO_DATA[c.id]=c);
+
+function demoRenderCL(){
+  const el=document.getElementById('clist');
+  el.innerHTML=DEMO_CLIENTS.map(c=>`<div class="ci ${S.id===c.id?'active':''}" onclick="pickClient('${c.id}')"><div class="ci-av">${c.name[0].toUpperCase()}</div><div class="ci-info"><div class="ci-nm">${c.name}</div><div class="ci-url">${c.rubro}</div></div></div>`).join('');
+}
+
+function demoLoadSEO(){
+  const c=DEMO_DATA[S.id];
+  if(!c||!c.services.includes('seo')){document.getElementById('seo-no-service').style.display='block';document.getElementById('seo-body').style.display='none';return;}
+  document.getElementById('seo-no-service').style.display='none';document.getElementById('seo-body').style.display='';
+  document.getElementById('seo-t').textContent=c.name;
+  document.getElementById('seo-s').textContent=`${c.url.replace(/https?:\/\//,'')} · últimos ${S.days} días`;
+  destroyC();
+  const f=S.days/14;
+  const clicks=Math.round(c.seo.clicks*f),clicksPrev=Math.round(c.seo.clicksPrev*f);
+  const impr=Math.round(c.seo.impr*f),imprPrev=Math.round(c.seo.imprPrev*f);
+  document.getElementById('k-cl').textContent=fN(clicks);document.getElementById('k-cl-d').innerHTML=dlt(clicks,clicksPrev,false);
+  document.getElementById('k-im').textContent=fN(impr);document.getElementById('k-im-d').innerHTML=dlt(impr,imprPrev,false);
+  document.getElementById('k-ct').textContent=fP(c.seo.ctr);document.getElementById('k-ct-d').innerHTML=dlt(c.seo.ctr,c.seo.ctrPrev,false);
+  document.getElementById('k-po').textContent=c.seo.pos.toFixed(1);document.getElementById('k-po-d').innerHTML=dlt(c.seo.pos,c.seo.posPrev,true);
+
+  document.getElementById('seo-biz-noga4').style.display='none';document.getElementById('seo-biz-kpis').style.display='grid';
+  const orgSess=Math.round(clicks*1.35),orgSessPrev=Math.round(clicksPrev*1.35);
+  const orgConv=Math.round(orgSess*0.045),orgConvPrev=Math.round(orgSessPrev*0.042);
+  document.getElementById('k-osess').textContent=fN(orgSess);document.getElementById('k-osess-d').innerHTML=dlt(orgSess,orgSessPrev,false);
+  document.getElementById('k-oconv').textContent=fN(orgConv);document.getElementById('k-oconv-d').innerHTML=dlt(orgConv,orgConvPrev,false);
+  const crNow=orgSess>0?(orgConv/orgSess*100):0, crPrev=orgSessPrev>0?(orgConvPrev/orgSessPrev*100):0;
+  document.getElementById('k-ocr').textContent=crNow.toFixed(1)+'%';document.getElementById('k-ocr-d').innerHTML=dlt(crNow,crPrev,false);
+
+  const kws=c.seo.kws.map(([q,pos,cl,ctr,prevPos])=>({q,pos,clicks:Math.round(cl*f),ctr,prevPos}));
+  const txKws=kws.filter(k=>/precio|comprar|costo|servicio|urgencia|contratar/i.test(k.q));
+  if(txKws.length){
+    const avgPos=txKws.reduce((s,k)=>s+k.pos,0)/txKws.length;
+    document.getElementById('k-txpos').textContent=avgPos.toFixed(1);
+    document.getElementById('k-txpos-d').innerHTML=`<span style="color:var(--gray-400)">${txKws.length} keyword${txKws.length>1?'s':''} de intención comercial</span>`;
+  }else{
+    document.getElementById('k-txpos').textContent='—';
+    document.getElementById('k-txpos-d').innerHTML='<span style="color:var(--gray-400)">Sin keywords de intención comercial detectadas</span>';
+  }
+
+  renderSEOFunnel(impr,clicks,orgConv);
+  renderSEOInsight(orgSess,orgSessPrev,orgConv,orgConvPrev);
+
+  const days=demoDates(S.days);
+  const clickSeries=demoSeries(days.length,clicks,c.id+'cl');
+  const imprSeries=demoSeries(days.length,impr,c.id+'im');
+  chartEmptyState('ch-tl', true);
+  S.charts.tl=new Chart(document.getElementById('ch-tl').getContext('2d'),{type:'line',data:{labels:days.map(d=>d.slice(5)),datasets:[{label:'Clics',data:clickSeries,borderColor:'#FF9933',backgroundColor:'rgba(255,153,51,0.10)',tension:.4,fill:true,pointRadius:0,borderWidth:2,yAxisID:'y'},{label:'Imp.',data:imprSeries,borderColor:'#6E6E6E',backgroundColor:'rgba(255,255,255,0.02)',tension:.4,fill:true,pointRadius:0,borderWidth:1.5,borderDash:[4,3],yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8A8A8A',font:{size:10},maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.06)'}},y:{display:false},y1:{display:false}}}});
+
+  const tb=document.getElementById('kw-body'),cb=document.getElementById('ctr-body');
+  tb.innerHTML='';cb.innerHTML='';
+  kws.forEach(k=>{
+    const pc=k.pos<=3?'pt3':k.pos<=10?'pt10':k.pos<=20?'pt20':'prs';
+    let ch;if(k.prevPos==null)ch='<span class="chip chn">nuevo</span>';else{const d=Math.round(k.prevPos-k.pos);if(d>0)ch=`<span class="chip chu">▲${d}</span>`;else if(d<0)ch=`<span class="chip chd">▼${Math.abs(d)}</span>`;else ch='<span class="chip chs">—</span>';}
+    tb.innerHTML+=`<tr><td class="kq" title="${k.q}">${k.q}</td><td><span class="pbadge ${pc}">${k.pos.toFixed(1)}</span></td><td>${fN(k.clicks)}</td><td>${fP(k.ctr)}</td><td>${ch}</td></tr>`;
+    cb.innerHTML+=`<div class="ctr-r"><span class="ctr-l">${k.q}</span><div class="ctr-t"><div class="ctr-f" style="width:${Math.min(100,k.ctr*100*5)}%"></div></div><span class="ctr-p">${fP(k.ctr)}</span></div>`;
+  });
+  const b=[0,0,0,0,0];kws.forEach(k=>{if(k.pos<=3)b[0]++;else if(k.pos<=10)b[1]++;else if(k.pos<=20)b[2]++;else if(k.pos<=50)b[3]++;else b[4]++;});
+  chartEmptyState('ch-pos', true);
+  S.charts.pos=new Chart(document.getElementById('ch-pos').getContext('2d'),{type:'doughnut',data:{labels:['Top 3','Top 10','Top 20','Top 50','50+'],datasets:[{data:b,backgroundColor:['#4ADE80','#CC3366','#E8524A','#E3B15C','#3A3A3A'],borderColor:'#4A1145',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#AEAEAE',font:{size:10},padding:8,boxWidth:8}}}}});
+}
+
+function demoLoadAEO(){
+  const c=DEMO_DATA[S.id];
+  if(!c||!c.services.includes('seo')){document.getElementById('aeo-no-service').style.display='block';document.getElementById('aeo-body').style.display='none';return;}
+  document.getElementById('aeo-no-service').style.display='none';document.getElementById('aeo-body').style.display='';
+  document.getElementById('aeo-s').textContent=`${c.name} · últimos ${S.days} días`;
+  const el=document.getElementById('aeo-conv-body');
+  el.innerHTML=c.seo.aeo.map(([q,imp,ctr,isLong,isIntent])=>{
+    const words=q.trim().split(/\s+/).length;
+    return `<div class="conv-q"><div class="conv-q-text">${q}</div><div class="conv-q-meta">${isLong?`<span class="conv-badge cb-long">${words} pal.</span>`:''} ${isIntent?'<span class="conv-badge cb-conv">intención IA</span>':''} <span class="conv-badge cb-imp">${fN(imp)} imp.</span><span style="font-family:'Barlow',sans-serif;font-size:10px;color:var(--gray-400)">${fP(ctr)} CTR</span></div></div>`;
+  }).join('');
+}
+
+function demoLoadCamp(){
+  const c=DEMO_DATA[S.id];
+  if(!c||!c.services.includes('ads')||!c.camp){document.getElementById('camp-no-service').style.display='block';['camp-no-ga4','camp-loading','camp-error','camp-kpis','camp-roas-row','camp-main','camp-tl-panel','camp-insight','camp-roadmap'].forEach(id=>document.getElementById(id).style.display='none');return;}
+  document.getElementById('camp-no-service').style.display='none';document.getElementById('camp-no-ga4').style.display='none';document.getElementById('camp-error').style.display='none';document.getElementById('camp-loading').style.display='none';
+  document.getElementById('camp-s').textContent=`${c.name} · últimos ${S.days} días`;
+  if(S.charts.camp)try{S.charts.camp.destroy();}catch(e){}
+  if(S.charts.campTl)try{S.charts.campTl.destroy();}catch(e){}
+  const f=S.days/14, camp=c.camp;
+  const totSess=Math.round(camp.sess*f),prevSess=Math.round(camp.sessPrev*f);
+  const totConv=Math.round(camp.conv*f),prevConv=Math.round(camp.convPrev*f);
+  const totCost=Math.round(camp.cost*f),prevCost=Math.round(camp.costPrev*f);
+  const totRev=Math.round(camp.rev*f);
+  const totCpa=totConv>0?(totCost/totConv):0, prevCpa=prevConv>0?(prevCost/prevConv):0;
+  const cr=totSess>0?(totConv/totSess*100):0, prevCr=prevSess>0?(prevConv/prevSess*100):0;
+  document.getElementById('camp-k-cpc').textContent=`$${Math.round(totCpa).toLocaleString('es-CL')}`;
+  document.getElementById('camp-k-cpc-d').innerHTML=dlt(totCpa,prevCpa,true);
+  document.getElementById('camp-k-sess').textContent=fN(totSess);document.getElementById('camp-k-sess-d').innerHTML=dlt(totSess,prevSess,false);
+  document.getElementById('camp-k-conv').textContent=fN(totConv);document.getElementById('camp-k-conv-d').innerHTML=dlt(totConv,prevConv,false);
+  document.getElementById('camp-k-cr').textContent=cr.toFixed(1)+'%';document.getElementById('camp-k-cr-d').innerHTML=dlt(cr,prevCr,false);
+  document.getElementById('camp-kpis').style.display='grid';
+  document.getElementById('camp-roadmap').style.display='block';
+  document.getElementById('camp-k-rev').textContent=`$${Math.round(totRev).toLocaleString('es-CL')}`;
+  document.getElementById('camp-k-roas').textContent=totCost>0?(totRev/totCost).toFixed(1)+'x':'—';
+  document.getElementById('camp-roas-row').style.display='grid';
+  renderCampInsight(totSess,prevSess,totConv,prevConv,totCpa,prevCpa);
+  const rows=camp.rows.map(([nm,medio,sess,conv,cost])=>({nm,medio,sess:Math.round(sess*f),conv:Math.round(conv*f),cost:Math.round(cost*f)}));
+  document.getElementById('camp-tbody').innerHTML=rows.map(r=>{const rcr=r.sess>0?(r.conv/r.sess*100):0;return `<tr><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.nm}">${r.nm}</td><td style="font-size:11px;color:var(--gray-400)">${r.medio}</td><td>${fN(r.sess)}</td><td>${fN(r.conv)}</td><td>${r.sess>0?rcr.toFixed(1)+'%':'—'}</td><td>${r.conv>0?`$${Math.round(r.cost/r.conv).toLocaleString('es-CL')}`:'—'}</td></tr>`;}).join('');
+  chartEmptyState('ch-camp', true);
+  S.charts.camp=new Chart(document.getElementById('ch-camp').getContext('2d'),{type:'bar',data:{labels:rows.map(r=>r.nm.length>18?r.nm.slice(0,16)+'…':r.nm),datasets:[{label:'Sesiones',data:rows.map(r=>r.sess),backgroundColor:'#FF9933',borderRadius:4,yAxisID:'y'},{label:'Conversiones',data:rows.map(r=>r.conv),backgroundColor:'#CC3366',borderRadius:4,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#AEAEAE',font:{size:10},boxWidth:8}}},scales:{x:{ticks:{color:'#8A8A8A',font:{size:9}},grid:{color:'rgba(255,255,255,0.06)'}},y:{position:'left',ticks:{color:'#8A8A8A',font:{size:10}},grid:{color:'rgba(255,255,255,0.06)'}},y1:{position:'right',ticks:{color:'#CC3366',font:{size:10}},grid:{display:false}}}}});
+  document.getElementById('camp-main').style.display='grid';
+  const days=demoDates(S.days);
+  const sessSeries=demoSeries(days.length,totSess,c.id+'csess');
+  const convSeries=demoSeries(days.length,totConv,c.id+'cconv');
+  chartEmptyState('ch-camp-tl', true);
+  S.charts.campTl=new Chart(document.getElementById('ch-camp-tl').getContext('2d'),{type:'line',data:{labels:days.map(d=>d.slice(5).replace('-','')),datasets:[{label:'Sesiones',data:sessSeries,borderColor:'#FF9933',backgroundColor:'rgba(255,153,51,0.10)',tension:.4,fill:true,pointRadius:0,borderWidth:2,yAxisID:'y'},{label:'Conversiones',data:convSeries,borderColor:'#CC3366',backgroundColor:'rgba(204,51,102,0.06)',tension:.4,fill:false,pointRadius:0,borderWidth:1.5,borderDash:[4,3],yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#AEAEAE',font:{size:10},boxWidth:8}}},scales:{x:{ticks:{color:'#8A8A8A',font:{size:10},maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.06)'}},y:{display:false},y1:{display:false}}}});
+  document.getElementById('camp-tl-panel').style.display='block';
+}
+
+function demoLoadMeta(){
+  const c=DEMO_DATA[S.id];
+  if(!c||!c.services.includes('meta')||!c.meta){document.getElementById('meta-no-service').style.display='block';['meta-no-acc','meta-loading','meta-error','meta-body','meta-insight'].forEach(id=>document.getElementById(id).style.display='none');return;}
+  document.getElementById('meta-no-service').style.display='none';document.getElementById('meta-body').style.display='';document.getElementById('meta-no-acc').style.display='none';document.getElementById('meta-error').style.display='none';document.getElementById('meta-loading').style.display='none';
+  document.getElementById('meta-s').textContent=`${c.name} · últimos ${S_meta.days} días`;
+  if(S.charts.metaTl)try{S.charts.metaTl.destroy();}catch(e){}
+  const f=S_meta.days/14, m=c.meta;
+  const spend=Math.round(m.spend*f),pSpend=Math.round(m.spendPrev*f);
+  const imp=Math.round(m.imp*f),pImp=Math.round(m.impPrev*f);
+  const clicks=Math.round(m.clicks*f),pClicks=Math.round(m.clicksPrev*f);
+  const reach=Math.round(m.reach*f),pReach=Math.round(m.reachPrev*f);
+  const conv=Math.round(m.conv*f),pConv=Math.round(m.convPrev*f);
+  const freq=m.freq,pFreq=m.freqPrev;
+  const cpr=conv>0?(spend/conv):0, pCpr=pConv>0?(pSpend/pConv):0;
+  document.getElementById('meta-k-cpr').textContent=`$${cpr.toFixed(2)}`;document.getElementById('meta-k-cpr-d').innerHTML=dlt(cpr,pCpr,true);
+  document.getElementById('meta-k-conv').textContent=fN(conv);document.getElementById('meta-k-conv-d').innerHTML=dlt(conv,pConv,false);
+  document.getElementById('meta-k-freq').textContent=freq.toFixed(2)+'x';document.getElementById('meta-k-freq-d').innerHTML=freq>=3.5?'<span class="dn">⚠ posible fatiga de audiencia</span>':dlt(freq,pFreq,true);
+  document.getElementById('meta-k-spend').textContent=`$${spend.toLocaleString('es-CL')}`;document.getElementById('meta-k-spend-d').innerHTML=dlt(spend,pSpend,false);
+  document.getElementById('meta-kpis').style.display='grid';
+  if(m.value>0){
+    const value=Math.round(m.value*f);
+    document.getElementById('meta-k-value').textContent=`$${value.toLocaleString('es-CL')}`;
+    document.getElementById('meta-k-roas').textContent=(value/spend).toFixed(1)+'x';
+    document.getElementById('meta-roas-row').style.display='grid';
+  }else{document.getElementById('meta-roas-row').style.display='none';}
+  document.getElementById('meta-k-imp').textContent=fN(imp);document.getElementById('meta-k-imp-d').innerHTML=dlt(imp,pImp,false);
+  document.getElementById('meta-k-clicks').textContent=fN(clicks);document.getElementById('meta-k-clicks-d').innerHTML=dlt(clicks,pClicks,false);
+  document.getElementById('meta-k-ctr').textContent=m.ctr.toFixed(2)+'%';document.getElementById('meta-k-ctr-d').innerHTML=dlt(m.ctr,m.ctrPrev,false);
+  document.getElementById('meta-k-reach').textContent=fN(reach);document.getElementById('meta-k-reach-d').innerHTML=dlt(reach,pReach,false);
+  document.getElementById('meta-kpis2').style.display='grid';
+  if(m.gaSess!=null){
+    const gaSess=Math.round(m.gaSess*f),gaSessPrev=Math.round(m.gaSessPrev*f);
+    const gaConv=Math.round(m.gaConv*f),gaConvPrev=Math.round(m.gaConvPrev*f);
+    const gaCr=gaSess>0?(gaConv/gaSess*100):0, pGaCr=gaSessPrev>0?(gaConvPrev/gaSessPrev*100):0;
+    document.getElementById('meta-k-gasess').textContent=fN(gaSess);document.getElementById('meta-k-gasess-d').innerHTML=dlt(gaSess,gaSessPrev,false);
+    document.getElementById('meta-k-gacr').textContent=gaCr.toFixed(1)+'%';document.getElementById('meta-k-gacr-d').innerHTML=dlt(gaCr,pGaCr,false);
+    document.getElementById('meta-ga4-row').style.display='grid';
+  }else{document.getElementById('meta-ga4-row').style.display='none';}
+  renderMetaInsight(spend,conv,pConv,cpr,pCpr,freq);
+  document.getElementById('meta-ads-panel').style.display='none';
+  document.getElementById('meta-social').style.display='grid';
+  document.getElementById('meta-fb-followers').textContent=fN(m.fb.followers)+' seguidores';
+  document.getElementById('meta-fb-delta').innerHTML='<span style="color:var(--gray-400)">@'+m.fb.name+'</span>';
+  document.getElementById('meta-ig-followers').textContent=fN(m.ig.followers)+' seguidores';
+  document.getElementById('meta-ig-delta').innerHTML='<span style="color:var(--gray-400)">@'+m.ig.username+'</span>';
+  const rows=m.rows.map(([nm,rspend,rctr,rimp,rclicks])=>({nm,spend:Math.round(rspend*f),ctr:rctr,imp:Math.round(rimp*f),clicks:Math.round(rclicks*f)}));
+  document.getElementById('meta-context-body').innerHTML=[
+    `<b>Cuenta:</b> demo`,
+    `<b>Período:</b> últimos ${S_meta.days} días`,
+    `<b>Campañas activas:</b> ${rows.length}`,
+    `<b>Gasto total:</b> $${spend.toLocaleString('es-CL')}`,
+    `<b>Frecuencia:</b> ${freq.toFixed(2)}x`,
+    `<b>Costo por resultado:</b> $${cpr.toFixed(2)}`,
+  ].map(l=>`<div>${l}</div>`).join('');
+  document.getElementById('meta-tbody').innerHTML=rows.map(r=>{const cpc=r.clicks>0?(r.spend/r.clicks):0;return `<tr><td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.nm}">${r.nm}</td><td>$${r.spend.toLocaleString('es-CL')}</td><td>${fN(r.imp)}</td><td>${fN(r.clicks)}</td><td>$${cpc.toFixed(2)}</td><td>${r.ctr.toFixed(2)}%</td></tr>`;}).join('');
+  const days=demoDates(S_meta.days);
+  const spendSeries=demoSeries(days.length,spend,c.id+'mspend');
+  const clickSeries=demoSeries(days.length,clicks,c.id+'mclicks');
+  chartEmptyState('ch-meta-tl', true);
+  S.charts.metaTl=new Chart(document.getElementById('ch-meta-tl').getContext('2d'),{type:'line',data:{labels:days.map(d=>d.slice(5)),datasets:[{label:'Gasto ($)',data:spendSeries,borderColor:'#FF9933',backgroundColor:'rgba(255,153,51,0.10)',tension:.4,fill:true,pointRadius:0,borderWidth:2,yAxisID:'y'},{label:'Clics',data:clickSeries,borderColor:'#CC3366',backgroundColor:'rgba(204,51,102,0.06)',tension:.4,fill:false,pointRadius:0,borderWidth:1.5,borderDash:[4,3],yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#AEAEAE',font:{size:10},boxWidth:8}}},scales:{x:{ticks:{color:'#8A8A8A',font:{size:10},maxTicksLimit:10},grid:{color:'rgba(255,255,255,0.06)'}},y:{position:'left',ticks:{color:'#FF9933',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.06)'}},y1:{position:'right',ticks:{color:'#CC3366',font:{size:10}},grid:{display:false}}}}});
+  document.getElementById('meta-main').style.display='grid';
+}
+
+function demoRenderGEO(){
+  const c=DEMO_DATA[S.id];
+  document.getElementById('geo-s').textContent=`${c.name} · últimos ${S.days} días`;
+  if(!c.services.includes('seo')){
+    document.getElementById('geo-no-service').style.display='block';document.getElementById('geo-ga4-btn').style.display='none';
+    ['geo-insight','geo-kpis','geo-ga4-section','geo-extra-section','geo-no-ga4','geo-ga4-loading','geo-ga4-error'].forEach(id=>document.getElementById(id).style.display='none');
+    return;
+  }
+  document.getElementById('geo-no-service').style.display='none';
+  if(!c.geo){document.getElementById('geo-ga4-btn').style.display='none';showNoGA4();return;}
+  document.getElementById('geo-ga4-btn').style.display='';
+  document.getElementById('geo-no-ga4').style.display='none';document.getElementById('geo-ga4-error').style.display='none';document.getElementById('geo-ga4-loading').style.display='none';
+  const f=S.days/14, geo=c.geo;
+  const src=geo.sources.map(([key,sess,users,conv,dur])=>{const meta=AI_SOURCES.find(s=>s.key===key);return{key,label:meta.label,color:meta.color,sess:Math.round(sess*f),sessPrev:Math.round(sess*f*0.82),users:Math.round(users*f),conv:Math.round(conv*f),dur};});
+  const totSess=src.reduce((s,x)=>s+x.sess,0), totPrevSess=src.reduce((s,x)=>s+x.sessPrev,0);
+  const totUsr=src.reduce((s,x)=>s+x.users,0), totPrevUsr=Math.round(totUsr*0.85);
+  const totConv=src.reduce((s,x)=>s+x.conv,0), totPrevConv=Math.round(totConv*0.8);
+  document.getElementById('geo-k-sess').textContent=fN(totSess);document.getElementById('geo-k-sess-d').innerHTML=dlt(totSess,totPrevSess,false);
+  document.getElementById('geo-k-usr').textContent=fN(totUsr);document.getElementById('geo-k-usr-d').innerHTML=dlt(totUsr,totPrevUsr,false);
+  document.getElementById('geo-k-conv').textContent=fN(totConv);document.getElementById('geo-k-conv-d').innerHTML=dlt(totConv,totPrevConv,false);
+  const aiCr=totSess>0?(totConv/totSess*100):0;
+  document.getElementById('geo-k-cr').textContent=aiCr.toFixed(1)+'%';
+  document.getElementById('geo-k-cr-d').innerHTML=`<span style="color:var(--gray-400)">vs ${geo.orgCr.toFixed(1)}% orgánico</span>`;
+  document.getElementById('geo-kpis').style.display='grid';
+  renderGEOInsight(totSess,totPrevSess,aiCr,geo.orgCr);
+  const sorted=src.slice().sort((a,b)=>b.sess-a.sess);
+  document.getElementById('geo-ga4-body').innerHTML=sorted.map(s=>`<tr><td><div class="ga4-src"><span class="ga4-dot" style="background:${s.color}"></span>${s.label}</div></td><td>${fN(s.sess)} ${dlt(s.sess,s.sessPrev,false)}</td><td>${fN(s.users)}</td><td>${fN(s.conv)}</td><td>${fSec(s.dur)}</td></tr>`).join('');
+  if(S.charts.geoTraffic)try{S.charts.geoTraffic.destroy();}catch(e){}
+  const weeks=Math.max(4,Math.round(S.days/7));
+  const wLabels=Array.from({length:weeks},(_,i)=>`S${weeks-i}`);
+  const datasets=src.map(s=>({label:s.label.split('/')[0].trim(),data:demoSeries(weeks,s.sess,c.id+s.key+'w'),borderColor:s.color,backgroundColor:s.color+'22',tension:.4,fill:false,pointRadius:3,pointHoverRadius:5,borderWidth:2}));
+  chartEmptyState('ch-geo-traffic', true);
+  S.charts.geoTraffic=new Chart(document.getElementById('ch-geo-traffic').getContext('2d'),{type:'line',data:{labels:wLabels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#AEAEAE',font:{size:10},boxWidth:8,usePointStyle:true}}},scales:{x:{ticks:{color:'#8A8A8A',font:{size:10},maxTicksLimit:12},grid:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#8A8A8A',font:{size:10},precision:0},grid:{color:'rgba(255,255,255,0.06)'},min:0}}}});
+  document.getElementById('geo-ga4-section').style.display='grid';
+  if(S.charts.geoMonthly)try{S.charts.geoMonthly.destroy();}catch(e){}
+  const mLabels=['Abr','May','Jun','Jul','Ago','Sep'];
+  const mData=demoSeries(6,Math.round(totSess*2.6),c.id+'month');
+  chartEmptyState('ch-geo-monthly', true);
+  S.charts.geoMonthly=new Chart(document.getElementById('ch-geo-monthly').getContext('2d'),{type:'line',data:{labels:mLabels,datasets:[{label:'Sesiones desde IAs',data:mData,borderColor:'#FF9933',backgroundColor:'#FF993322',tension:.4,fill:true,pointRadius:3,pointHoverRadius:5,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8A8A8A',font:{size:10}},grid:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#8A8A8A',font:{size:10},precision:0},grid:{color:'rgba(255,255,255,0.06)'},min:0}}}});
+  document.getElementById('geo-landing-body').innerHTML=geo.landing.map(([page,sess,conv])=>`<tr><td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${page}">${page}</td><td>${fN(Math.round(sess*f))}</td><td>${fN(Math.round(conv*f))}</td></tr>`).join('');
+  document.getElementById('geo-extra-section').style.display='grid';
+}
+
+function demoLoadRec(force){
+  const c=DEMO_DATA[S.id];
+  document.getElementById('rec-s').textContent=`${c.name} · ${S.days} días`;
+  ['rec-empty','rec-error','rec-loading'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('rec-btn').disabled=false;
+  document.getElementById('rec-summary-txt').textContent=c.rec.resumen;
+  document.getElementById('rec-summary-box').style.display='block';
+  const prioColor={'alta':'','media':'blue','baja':'green'};
+  const renderItems=(items,containerId)=>{const el=document.getElementById(containerId);if(!items?.length){el.innerHTML='<div class="rec-item" style="color:var(--gray-400)">Sin recomendaciones para esta área.</div>';return;}el.innerHTML=items.map(item=>`<div class="rec-item"><span class="rec-tag ${prioColor[item.prioridad]||''}">${(item.prioridad||'info').toUpperCase()}</span><strong>${item.titulo}</strong><br>${item.recomendacion}</div>`).join('');};
+  renderItems(c.rec.seo,'rec-seo-items');renderItems(c.rec.aeo,'rec-aeo-items');renderItems(c.rec.campanas,'rec-camp-items');
+  document.getElementById('rec-content').style.display='block';
+}
+
+function enterDemo(){
+  DEMO_ACTIVE=true;
+  document.body.classList.add('demo-mode');
+  S.token='DEMO';S.id=null;S.url=null;S.name='';
+  setConn(false);
+  renderCL();
+  pickClient(DEMO_CLIENTS[0].id);
+}
+function exitDemo(){
+  DEMO_ACTIVE=false;
+  document.body.classList.remove('demo-mode');
+  destroyC();
+  S.token=null;S.id=null;S.url=null;S.name='';
+  renderCL();
+  showAuth();
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.getElementById('t-dt').textContent=new Date().toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-renderCL();
 if(location.hash.includes('access_token')){
   const h=new URLSearchParams(location.hash.slice(1));
   const t=h.get('access_token');
   history.replaceState(null,'',location.pathname);
-  if(t){S.token=t;sessionStorage.setItem('bb_t',t);afterToken();}
+  if(t){S.token=t;sessionStorage.setItem('bb_t',t);renderCL();afterToken();}
+  else enterDemo();
 }else{
   const t=sessionStorage.getItem('bb_t');
-  if(t){S.token=t;afterToken();}
-  else showAuth();
+  if(t){S.token=t;renderCL();afterToken();}
+  else enterDemo();
 }
 
 async function afterToken(){
@@ -746,6 +1083,7 @@ function showSc(id){
 function showAuth(){setConn(false);showSc('sc-auth');}
 
 function renderCL(){
+  if(DEMO_ACTIVE){demoRenderCL();return;}
   const raw=clients(),el=document.getElementById('clist');
   if(!raw.length){el.innerHTML=`<div style="padding:8px 16px;font-size:11px;color:var(--gray-400);font-family:'Barlow',sans-serif">Sin clientes.<br>Usa + para agregar.</div>`;return;}
   const cmp=(a,b)=>a.localeCompare(b,'es',{sensitivity:'base'});
@@ -860,6 +1198,12 @@ function closeSidebar(){
 }
 
 function pickClient(id){
+  if(DEMO_ACTIVE){
+    const c=DEMO_DATA[id];if(!c)return;
+    S.id=c.id;S.url=c.url;S.name=c.name;
+    renderCL();updateNavLocks();enterDash();closeSidebar();
+    return;
+  }
   const c=clients().find(x=>x.id===id);if(!c)return;
   if(!S.token){sessionStorage.setItem('bb_pend',id);doOAuth();return;}
   S.id=c.id;S.url=c.url;S.name=c.name;
@@ -867,8 +1211,7 @@ function pickClient(id){
   renderCL();updateNavLocks();enterDash();closeSidebar();
 }
 function updateNavLocks(){
-  const c=clients().find(x=>x.id===S.id);
-  const svc=c&&c.services;
+  const svc=DEMO_ACTIVE?DEMO_DATA[S.id]?.services:clients().find(x=>x.id===S.id)?.services;
   document.querySelectorAll('.nav[id^="nv-"]').forEach(n=>n.classList.remove('locked'));
   if(!svc)return;
   const map={seo:['nv-seo','nv-aeo','nv-geo'],ads:['nv-camp'],meta:['nv-meta']};
@@ -916,6 +1259,7 @@ const COMMERCIAL_INTENT=/\b(precio|precios|cotiza|cotizar|cotización|comprar|co
 
 // ─── SEO ─────────────────────────────────────────────────────────────────────
 async function loadSEO(){
+  if(DEMO_ACTIVE){demoLoadSEO();return;}
   if(!S.token||!S.id)return;
   if(!hasService('seo')||!S.url){document.getElementById('seo-no-service').style.display='block';document.getElementById('seo-body').style.display='none';return;}
   document.getElementById('seo-no-service').style.display='none';document.getElementById('seo-body').style.display='';
@@ -1032,6 +1376,7 @@ async function loadKW(){
 
 // ─── AEO ─────────────────────────────────────────────────────────────────────
 async function loadAEO(){
+  if(DEMO_ACTIVE){demoLoadAEO();return;}
   if(!S.token||!S.id)return;
   if(!hasService('seo')||!S.url){document.getElementById('aeo-no-service').style.display='block';document.getElementById('aeo-body').style.display='none';return;}
   document.getElementById('aeo-no-service').style.display='none';document.getElementById('aeo-body').style.display='';
@@ -1054,6 +1399,7 @@ async function loadAEOConversational(){
 
 // ─── CAMPAÑAS ────────────────────────────────────────────────────────────────
 async function loadCamp(){
+  if(DEMO_ACTIVE){demoLoadCamp();return;}
   if(!S.token||!S.id)return;
   const client=clients().find(x=>x.id===S.id);
   if(!hasService('ads')){document.getElementById('camp-no-service').style.display='block';['camp-no-ga4','camp-loading','camp-error','camp-kpis','camp-roas-row','camp-main','camp-tl-panel','camp-insight','camp-roadmap'].forEach(id=>document.getElementById(id).style.display='none');return;}
@@ -1144,6 +1490,7 @@ function renderMetaInsight(spend,conv,pConv,cpr,pCpr,freq){
 
 // ─── GEO ─────────────────────────────────────────────────────────────────────
 async function renderGEO(){
+  if(DEMO_ACTIVE){demoRenderGEO();return;}
   document.getElementById('geo-s').textContent=`${S.name} · últimos ${S.days} días`;
   if(!hasService('seo')){
     document.getElementById('geo-no-service').style.display='block';document.getElementById('geo-ga4-btn').style.display='none';
@@ -1313,6 +1660,7 @@ function renderGEOInsight(sess,pSess,aiCr,orgCr){
 
 // ─── RECOMENDACIONES ─────────────────────────────────────────────────────────
 async function loadRec(force=false){
+  if(DEMO_ACTIVE){demoLoadRec(force);return;}
   if(!S.token||!S.id){document.getElementById('rec-empty').style.display='block';['rec-loading','rec-error','rec-content'].forEach(id=>document.getElementById(id).style.display='none');return;}
   document.getElementById('rec-s').textContent=`${S.name} · ${S.days} días`;
   if(!force&&document.getElementById('rec-content').style.display!=='none')return;
@@ -1463,6 +1811,7 @@ function metaDateRange(days){
 }
 
 async function loadMeta(){
+  if(DEMO_ACTIVE){demoLoadMeta();return;}
   if(!S.token||!S.id) return;
   const client = clients().find(x=>x.id===S.id);
   if(!hasService('meta')){
