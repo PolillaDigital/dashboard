@@ -282,6 +282,8 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
   .sidebar.open { transform:translateX(0); }
   .sidebar-overlay.open { display:block; }
   .main { margin-left:0 !important; }
+  .demo-banner { left:0 !important; }
+  .demo-mode .content { padding-bottom:96px; }
   .topbar { padding:0 14px; }
   .content { padding:10px 14px 40px; }
   .kpis { grid-template-columns:1fr 1fr !important; }
@@ -313,8 +315,9 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
 #nv-demo-exit{display:none;}
 .demo-mode #cl-tools,.demo-mode #nv-in,.demo-mode #nv-out,.demo-mode #t-pill{display:none!important;}
 .demo-mode #nv-demo-exit{display:flex!important;}
-.demo-banner{display:none;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--gold-light);border-bottom:1px solid var(--gold-mid);color:var(--gold);font-family:'Barlow',sans-serif;font-size:12px;padding:8px 16px;text-align:center;position:sticky;top:48px;z-index:40;}
+.demo-banner{display:none;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:#FFF3E6;border-top:1px solid var(--gold-mid);box-shadow:0 -2px 8px rgba(36,20,45,0.06);color:var(--gold);font-family:'Barlow',sans-serif;font-size:12px;padding:8px 16px;text-align:center;position:fixed;bottom:0;left:220px;right:0;z-index:60;}
 .demo-mode .demo-banner{display:flex;}
+.demo-mode .content{padding-bottom:70px;}
 .demo-banner button{background:var(--gold);color:#330033;border:none;border-radius:var(--radius);padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;}
 </style>
 </head>
