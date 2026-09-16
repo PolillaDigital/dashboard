@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Panel de Resultados — Polilla Digital</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -257,8 +258,8 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
   .topbar{display:none !important;}
 }
 #pdf-header{display:none;padding:0 0 18px 0;border-bottom:3px solid #FF9933;margin-bottom:22px;}
-#pdf-header .pdf-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;}
-#pdf-header .pdf-logo{font-size:20px;font-weight:700;color:#FFFFFF;letter-spacing:-.01em;}
+#pdf-header .pdf-top{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+#pdf-header .pdf-logo{height:28px;}
 #pdf-header .pdf-date{font-size:10px;color:#8A8A8A;font-family:'Barlow',sans-serif;white-space:nowrap;}
 #pdf-header .pdf-meta{font-size:13px;color:#D8D4CB;margin-top:4px;font-weight:500;}
 #pdf-header .pdf-stamp{font-size:10px;color:#6E6E6E;font-family:'Barlow',sans-serif;margin-top:8px;}
@@ -390,7 +391,7 @@ body { font-family: 'Barlow', sans-serif; background: radial-gradient(130% 90% a
     </div>
     <div class="content">
       <div id="pdf-header">
-        <div class="pdf-top"><div class="pdf-logo" id="pdf-logo">Polilla Digital</div><div class="pdf-date" id="pdf-date"></div></div>
+        <div class="pdf-top"><img class="pdf-logo" id="pdf-logo" src="logo-white.png" alt="Polilla Digital"/><div class="pdf-date" id="pdf-date"></div></div>
         <div class="pdf-meta" id="pdf-meta"></div>
         <div class="pdf-stamp">Polilla Digital — Agencia de Marketing Digital · polilladigital.cl</div>
       </div>
@@ -1384,7 +1385,6 @@ async function takePolaroid(){
   if(btn){btn.disabled=true;btn.dataset.orig=btn.textContent;btn.textContent='⏳ Preparando reporte…';}
 
   const date=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('pdf-logo').textContent='Polilla Digital';
   document.getElementById('pdf-date').textContent=date;
   document.getElementById('pdf-meta').textContent=`Reporte de resultados · ${S.name} — últimos ${S.days} días`;
 
